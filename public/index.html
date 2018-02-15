@@ -1,0 +1,284 @@
+<!-- TO DO:
+- Maybe abstract handlebars stuff to its own module
+- Figure out sticky footer for christ's sake (Done 11/4)
+- Add a feedback to users when buttons are clicked
+- Get rid of ugly outline around all buttons when they're clicked
+- Maybe put artists in a scrollable area
+- Refactor ids and classes - it's a mess
+- Change document.getElementById to $(element) -->
+
+<html>
+  <head>
+    <title>Landing Page</title>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-2.1.4.js"></script>
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+    <style type="text/css">
+      html, 
+      body{
+        background-color: whitesmoke;
+        padding: 0;
+        margin: 0;
+        height: 100%
+      }
+      .container{
+        color: black;
+        padding-top: 50px;
+        min-height: 100%;
+        max-width: 70em;
+        height: auto !important;
+        height: 100%;
+        margin: 0 auto -50px;
+        background-color: white;
+      }
+          #header {
+            background-color: white;
+            padding: 25px 0px;            
+          }
+          #body{
+            padding: 25px;
+            min-height: calc(100vh - 40px);
+          }
+          #footer{
+            /* width:100%; */
+            height:90px;   /* Height of the footer */
+            background-color: white;
+            color: black;
+            text-align: center;
+            padding-top: 35px;
+          }
+          #footer p{
+          background-color: white;
+          /* font-size: 0.9em; */
+          font-weight: bold;
+          }
+
+          #login, #loggedin {
+            /* display: none; */
+          }
+      .push {
+        /* min-width: 100%; */
+        height: 50px;
+        bottom: 0;
+        line-height: 50px;
+      }
+      a:link{
+        color: black;
+        text-decoration: underline;
+      }
+      a:hover{
+        text-decoration: underline;
+        color: #D548A6;
+      }
+      h1 {
+        display: block;
+        padding-top: 1em;
+      }
+      .btn, .btn:focus {
+        margin: 2em 0em;
+        background-color: #D548A6;
+        color: white;
+        border-radius: 25px;
+        padding: 15px 20px 15px 20px;
+        border-color: #D548A6;
+        border-radius: 20px;
+        border: 0;
+        text-transform: uppercase;
+        font-size: 0.8em;
+        font-weight: bold;
+      }
+      .btn:hover{
+        background-color: #D548A6;
+        transform: scale(1.05);
+      }
+      .dataRegion{
+        padding-top: 2em;
+      }
+      input{
+          color:#181818;
+          min-width: 40em;
+      }
+      #scrapedData{
+          padding-left: 25px;
+      }
+      #scrapedData li{
+        margin: 0 0 .3em 0;
+      }
+
+    </style>
+
+    <script>
+        
+    </script>
+
+  </head>
+
+    <body> 
+        <!-- Primary section of the intro page -->
+        <div class="container">
+            <div id="login">
+              <div id="header">
+                <h1>Sup. Imma generic web scraper.</h1>
+                <p>I scrape data from websites. I am not hardcoded to care about the particular layout of the website.</p>
+                <p>To use this tool, enter a website URL into the first box. Then enter downward traversing DOM elements to obtain key data elements.</p>
+                <p>Proper use requires that you know the general layout of the website to scrape, and how to traverse DOM elements.</p>
+              </div>
+            </div>
+
+            <!-- Placeholders to be replaced by compiled handlebars responses -->
+            <h2>So. Whatchu finna scrape?</h2>
+                <form class="scraperForm" id="urlForm">
+                    <div class="fieldwrapper">
+                        <input  class="webUrl"
+                                id="website" 
+                                placeholder="Throw a URL in here (required)" 
+                                type="url">
+                        </input>
+                        <input  class="add"
+                                id="addURL"
+                                type="button"
+                                value = "Add Another URL">
+                        </input>
+                    </div>
+
+                  </form>
+                  <form class="scraperForm" id="toolbox">
+                    <p>
+                        <input id="pageElement" 
+                                placeholder="Name your main page element (required)"
+                                type="text">
+                        </input>
+                    </p>
+                    <p>
+                        <input id="childElement" 
+                              placeholder="Got a child element you want me to look out for?"
+                              type="text"></input>
+                    </p>
+                    <p>
+                        <input id="subChildElement" 
+                                placeholder="Got another child element to watch?"
+                                type="text"></input>
+                    </p> 
+                    <p>
+                        <input type="checkbox" id="reqLogin"> Site requires login</input>
+                    </p>
+                    <button class="btn btn-primary" id="scrape-stuff" action="/scraper">
+                        Scrape Data
+                    </button>
+                   
+                </form>
+
+            <div id="scrapedData">
+            </div>
+        </div>
+
+
+        <!-- Footer stuff -->
+        <div class="push"></div>
+        <div id="footer">
+            <p>This thing was created using Node.js, Express.js, Handlebars.js, HTML, CSS, jQuery, way too many shell commands, and a shitload of uppers.</p>
+        </div>
+        
+        <!-- User template to be referenced during handlebars compile -->
+
+        <!-- Artists-followed template to be referenced during handlebars compile -->
+        <script id="followed-artists-template" type="text/x-handlebars-template">
+          <h1>Following these artists:</h1>
+          {{#each artists.items}}
+          <dl>
+            <dd>{{name}}</dd>
+          {{/each}}
+          </dl>
+        </script>
+
+        <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0-alpha.1/handlebars.min.js"></script>
+        <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+        
+        <!-- AJAX sections -->
+        <script>
+        (function() {
+
+        var scrapedArea = document.getElementById('scrapedData');
+        error_css = {"border-color":"red"};
+        reset_css = {"border-color":"initial"};
+
+      // Add new fields on the fly - allows for multiple urls
+          $('#addURL').click(function(){
+            var lastField = $("#urlForm div:last");
+            var intId = (lastField && lastField.length && lastField.data("idx") + 1) || 1;
+            var fieldWrapper = $("<div class=\"fieldwrapper\" id=\"website" + intId + "\"/>");
+            fieldWrapper.data("idx", intId);
+            var fName = $("<input type=\"url\" class=\"webUrl\" />");
+            fName.attr("placeholder", "Add another URL");
+            var removeButton = $("<input type=\"button\" class=\"remove\" value=\"-\" />");
+
+            removeButton.click(function() {
+                $(this).parent().remove();
+            });
+            fieldWrapper.append(fName);
+            fieldWrapper.append(removeButton);
+            $("#urlForm").append(fieldWrapper);
+          })
+
+
+      // Check fields to see if required data entered
+          $('#scrape-stuff').on('click', function(){
+            if($('#reqLogin').is(':checked')){
+                var reqLogin = true;
+            }
+              if($('#website').val() == ''){
+                $('#website').css(error_css);
+                return false;
+              }
+              else if($('#pageElement').val() == ''){
+                $('#pageElement').css(error_css);
+                return false;
+              }
+              else {
+              // Clear validation errors
+                $('#website').css(reset_css);
+                $('#pageElement').css(reset_css);
+
+              // Get all websites and put to a list
+                var urls = [];
+                $(".webUrl").each(function(index, element){
+                  urls[index] = {};
+                  urls[index] = $(element).val();
+                });
+
+              // Base64 it so it doesn't break the query string (does it need to be a json?)
+                urls = encodeURIComponent(urls);
+
+              // Call the scraper
+                callScrapey();
+                return false;
+              }
+
+        // If all fields look good, make AJAX call
+              function callScrapey() {
+                return $.ajax({
+                  url: $('#scrape-stuff').attr('action'),
+                  data: {
+                      inputUrl: urls, 
+                      pageElement: $("#pageElement").val(),
+                      childElement: $("#childElement").val(),
+                      subChildElement: $("#subChildElement").val(),
+                      reqLogin: reqLogin
+                  },
+                  // async: false,
+                  success: function(data, status, response){
+                      scrapedArea.innerHTML = "<h2>Ayyy:</h2>";
+
+                    var scrapedSite = "<h3>I scraped the website named:</h3><p>" + data.site + "</p>";                
+                    scrapedArea.innerHTML += scrapedSite;    
+                    var scrapedUrl = "<h3>...On the page found at:</h3><p><a href=" + data.url + ">" + data.url + " </a></p>";
+                    scrapedArea.innerHTML += scrapedUrl;
+                    var scrapedArtists = "<h3>And grabbed all this stuff:</h3>" + "<ol>"  + data.id + "</ol>";
+                    scrapedArea.innerHTML += scrapedArtists;
+                  } 
+                });
+              }                 
+          });
+        })(); // bottom
+        </script>
+    </body>
+</html>
