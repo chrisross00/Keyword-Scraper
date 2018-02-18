@@ -103,6 +103,15 @@
       #scrapedData li{
         margin: 0 0 .3em 0;
       }
+      .add, .remove{
+        background-color: #D548A6;
+        color: white;
+        min-width: 30px;
+        border-radius: 50px;
+      }
+      .remove{
+        margin-left:3px;
+      }
 
     </style>
 
@@ -136,7 +145,7 @@
                         <input  class="add"
                                 id="addURL"
                                 type="button"
-                                value = "Add Another URL">
+                                value = "+">
                         </input>
                     </div>
 
@@ -163,6 +172,9 @@
                     </p>
                     <button class="btn btn-primary" id="scrape-stuff" action="/scraper">
                         Scrape Data
+                    </button>
+                    <button class="btn btn-primary" id="clear-scraper" action="/clearScraper">
+                      Clear Data
                     </button>
                    
                 </form>
@@ -193,7 +205,7 @@
         <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0-alpha.1/handlebars.min.js"></script>
         <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
         
-        <!-- AJAX sections -->
+<!-- AJAX sections -->
         <script>
         (function() {
 
@@ -219,9 +231,19 @@
             $("#urlForm").append(fieldWrapper);
           })
 
+          $('#clear-scraper').on('click', function(){
+
+            console.log('clicked');
+            $.ajax({
+              url: $('#clear-scraper').attr('action'),
+              success: function(data, status){
+              }
+            })
+          });
 
       // Check fields to see if required data entered
           $('#scrape-stuff').on('click', function(){
+            console.log('clicked');
             if($('#reqLogin').is(':checked')){
                 var reqLogin = true;
             }
@@ -240,13 +262,14 @@
 
               // Get all websites and put to a list
                 var urls = [];
-                $(".webUrl").each(function(index, element){
-                  urls[index] = {};
-                  urls[index] = $(element).val();
+                $(".webUrl").each(function(){
+                  urls.push(encodeURIComponent($(this).val()));
                 });
 
               // Base64 it so it doesn't break the query string (does it need to be a json?)
-                urls = encodeURIComponent(urls);
+                // urls = encodeURIComponent(urls);
+                
+                console.log(urls);
 
               // Call the scraper
                 callScrapey();
@@ -276,7 +299,8 @@
                     scrapedArea.innerHTML += scrapedArtists;
                   } 
                 });
-              }                 
+              }
+              
           });
         })(); // bottom
         </script>
