@@ -103,6 +103,19 @@
       #scrapedData li{
         margin: 0 0 .3em 0;
       }
+      .add, .remove{
+        background-color: #D548A6;
+        color: white;
+        min-width: 30px;
+        border-radius: 50px;
+      }
+      .remove{
+        margin-left:3px;
+      }
+      .custom-site-hide{
+        display: none;
+        /* visibility: hidden; */
+      }
 
     </style>
 
@@ -126,6 +139,17 @@
 
             <!-- Placeholders to be replaced by compiled handlebars responses -->
             <h2>So. Whatchu finna scrape?</h2>
+              <select class="sitePicker">
+                  <option>-Select an Option-</option>
+                  <option>DuckClub</option>
+                  <option>KEXP</option>
+                  <option>Reddit</option>
+                  <option>Scrape my own site</option>
+                </select>
+          
+            <!-- <button class="sitePicker">clickme</button> -->
+            <div class="custom-site-hide">
+              <p></p>
                 <form class="scraperForm" id="urlForm">
                     <div class="fieldwrapper">
                         <input  class="webUrl"
@@ -136,12 +160,12 @@
                         <input  class="add"
                                 id="addURL"
                                 type="button"
-                                value = "Add Another URL">
+                                value = "+">
                         </input>
                     </div>
-
                   </form>
-                  <form class="scraperForm" id="toolbox">
+
+                  <form class="scraperForm-hide" id="toolbox">
                     <p>
                         <input id="pageElement" 
                                 placeholder="Name your main page element (required)"
@@ -161,9 +185,15 @@
                     <p>
                         <input type="checkbox" id="reqLogin"> Site requires login</input>
                     </p>
+            </div>
+                  <div class="button-holder">
                     <button class="btn btn-primary" id="scrape-stuff" action="/scraper">
                         Scrape Data
                     </button>
+                    <button class="btn btn-primary" id="clear-scraper" action="/clearScraper">
+                      Clear Data
+                    </button>
+                  </div>
                    
                 </form>
 
@@ -193,13 +223,34 @@
         <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0-alpha.1/handlebars.min.js"></script>
         <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
         
-        <!-- AJAX sections -->
+<!-- AJAX sections -->
         <script>
         (function() {
 
         var scrapedArea = document.getElementById('scrapedData');
         error_css = {"border-color":"red"};
         reset_css = {"border-color":"initial"};
+
+      // Show form if "scrape a different site" is selected
+          $('.sitePicker').change(function(){
+            var str;
+            str = $(".sitePicker option:selected").text();
+            console.log(str);
+            console.log($(this).next("div"));
+
+            if(str == "Scrape my own site"){
+              $(this).next("div").each(function(){
+                if(this.className == "custom-site-hide"){
+                  this.className = this.className.replace("hide","show");
+                }
+              });
+            }
+            else{
+              $(this).next("div").each(function(){
+                  this.className = this.className.replace("show","hide");
+                });
+            }
+          });
 
       // Add new fields on the fly - allows for multiple urls
           $('#addURL').click(function(){
@@ -219,12 +270,24 @@
             $("#urlForm").append(fieldWrapper);
           })
 
+        // Click 'Clear Data'
+          $('#clear-scraper').on('click', function(){
+            scrapedArea.innerHTML = '';
+            console.log('clicked');
+            $.ajax({
+              url: $('#clear-scraper').attr('action'),
+              success: function(data, status){
+              }
+            })
+          });
 
-      // Check fields to see if required data entered
+      // Click 'Scrape Data'
+        // Check fields to see if required data entered
           $('#scrape-stuff').on('click', function(){
-            if($('#reqLogin').is(':checked')){
+            if($('.custom-site-hide').is(":visible")){
+              if($('#reqLogin').is(':checked')){
                 var reqLogin = true;
-            }
+              }
               if($('#website').val() == ''){
                 $('#website').css(error_css);
                 return false;
@@ -240,18 +303,35 @@
 
               // Get all websites and put to a list
                 var urls = [];
-                $(".webUrl").each(function(index, element){
-                  urls[index] = {};
-                  urls[index] = $(element).val();
+                $(".webUrl").each(function(){
+                  urls.push(encodeURIComponent($(this).val()));
                 });
 
               // Base64 it so it doesn't break the query string (does it need to be a json?)
-                urls = encodeURIComponent(urls);
+                // urls = encodeURIComponent(urls);
+                
+                console.log(urls);
 
               // Call the scraper
                 callScrapey();
                 return false;
               }
+            }
+            else{
+              if($(".sitePicker option:selected").val()=='-Select an Option-'){
+                while($(".sitePicker option:selected").val()=='-Select an Option-'){
+                  $(".sitePicker").css(error_css);
+                  return false;
+                }
+              }
+              else{
+                $(".sitePicker").css(reset_css);
+                callScrapey();
+                return false;
+              }                
+            }
+            console.log('clicked');
+            
 
         // If all fields look good, make AJAX call
               function callScrapey() {
@@ -262,12 +342,12 @@
                       pageElement: $("#pageElement").val(),
                       childElement: $("#childElement").val(),
                       subChildElement: $("#subChildElement").val(),
-                      reqLogin: reqLogin
+                      reqLogin: reqLogin,
+                      dropDownSelection: $(".sitePicker option:selected").val()
                   },
                   // async: false,
                   success: function(data, status, response){
-                      scrapedArea.innerHTML = "<h2>Ayyy:</h2>";
-
+                    scrapedArea.innerHTML = "<h2>Ayyy:</h2>";
                     var scrapedSite = "<h3>I scraped the website named:</h3><p>" + data.site + "</p>";                
                     scrapedArea.innerHTML += scrapedSite;    
                     var scrapedUrl = "<h3>...On the page found at:</h3><p><a href=" + data.url + ">" + data.url + " </a></p>";
@@ -276,7 +356,8 @@
                     scrapedArea.innerHTML += scrapedArtists;
                   } 
                 });
-              }                 
+              }
+              
           });
         })(); // bottom
         </script>
