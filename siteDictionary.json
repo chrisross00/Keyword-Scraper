@@ -1,23 +1,22 @@
 { "sites": 
-    [{"DuckClub":
-        {"name":"DuckClub",
+    [   {"name":"DuckClub",
         "url":"http://theduckclub.com/event-categories/upcoming-shows/",
         "pageElement":"article",
         "childElement":"header",
         "subChildElement":"a",
-        "reqLogin": false}},
-    {"2": 
+        "reqLogin": false},
+    
         {"name":"KEXP",
         "url":"https://kexp.org/podcasts/song-of-the-day/",
         "pageElement":".MediaCard",
         "childElement":".MediaCard-title",
         "subChildElement":"",
-        "reqLogin": false}},
-    {"3":
+        "reqLogin": false},
+    
         {"name":"Reddit",
         "url":"https://www.reddit.com/",
         "pageElement":".thing",
         "childElement":"p",
         "subChildElement":"",
-        "reqLogin":false}}]
+        "reqLogin":false}]
     }
