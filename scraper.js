@@ -16,6 +16,7 @@ var cheerio = require('cheerio');
 var querystring = require('../node_modules/querystring');
 var elementsForUI = [];
 var siteToScrape;
+var extDictionary = require('./siteDictionary.json');
 var siteDictionary = 
     {'DuckClub':
         {url:'http://theduckclub.com/event-categories/upcoming-shows/',
@@ -40,6 +41,12 @@ var siteDictionary =
 // NOTE: should push the site names to a handlebars template to populate dropdown box so it's not hardcodeded
 
 app = express();
+
+// Test to make sure calling external dictionary correctly
+// Next step: make this assign to getPageData vars instead of using "req.query"
+console.log('external dictionary = ' + extDictionary.sites[2].url);
+
+
 exports.getPageData = getPageData;
 exports.clearScraper = clearScraper;
 
