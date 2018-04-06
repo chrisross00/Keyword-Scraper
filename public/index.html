@@ -114,7 +114,10 @@
       }
       .custom-site-hide{
         display: none;
-        /* visibility: hidden; */
+        visibility: hidden;
+      }
+      .custom-site-show{
+        visibility:visible;
       }
 
     </style>
@@ -284,7 +287,7 @@
       // Click 'Scrape Data'
         // Check fields to see if required data entered
           $('#scrape-stuff').on('click', function(){
-            if($('.custom-site-hide').is(":visible")){
+            if($('.custom-site-show').is(":visible")){
               if($('#reqLogin').is(':checked')){
                 var reqLogin = true;
               }
@@ -298,6 +301,7 @@
               }
               else {
               // Clear validation errors
+                console.log("clearing validation errors");
                 $('#website').css(reset_css);
                 $('#pageElement').css(reset_css);
 
@@ -310,7 +314,7 @@
               // Base64 it so it doesn't break the query string (does it need to be a json?)
                 // urls = encodeURIComponent(urls);
                 
-                console.log(urls);
+                console.log("urls are: " + urls);
 
               // Call the scraper
                 callScrapey();
@@ -319,6 +323,7 @@
             }
             else{
               if($(".sitePicker option:selected").val()=='-Select an Option-'){
+                console.log('error: defualt selection chosen');
                 while($(".sitePicker option:selected").val()=='-Select an Option-'){
                   $(".sitePicker").css(error_css);
                   return false;

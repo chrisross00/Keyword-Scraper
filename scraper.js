@@ -17,34 +17,10 @@ var querystring = require('../node_modules/querystring');
 var elementsForUI = [];
 var siteToScrape;
 var extDictionary = require('./siteDictionary.json');
-var siteDictionary = 
-    {'DuckClub':
-        {url:'http://theduckclub.com/event-categories/upcoming-shows/',
-        pageElement:'article',
-        childElement:'header',
-        subChildElement:'a',
-        reqLogin: false},
-    'KEXP': 
-        {url:'https://kexp.org/podcasts/song-of-the-day/',
-        pageElement:'.MediaCard',
-        childElement:'.MediaCard-title',
-        subChildElement:'',
-        reqLogin: false},
-    'Reddit':
-        {url:'https://www.reddit.com/',
-        pageElement:'.thing',
-        childElement:"p",
-        subChildElement:'',
-        reqLogin:false}
-    }
 
 // NOTE: should push the site names to a handlebars template to populate dropdown box so it's not hardcodeded
 
 app = express();
-
-// Test to make sure calling external dictionary correctly
-// Next step: make this assign to getPageData vars instead of using "req.query"
-console.log('external dictionary = ' + extDictionary.sites[2].url);
 
 
 exports.getPageData = getPageData;
@@ -60,24 +36,41 @@ function clearScraper(req, res){
 
 // Assign everything from AJAX call to a variable
     function getPageData(req,res){
-        console.log(req.query.dropDownSelection);
+        var urls = [];
+        console.log('dropdown selection = ' + req.query.dropDownSelection);
         siteToScrape = req.query.dropDownSelection;
-        console.log(siteToScrape);
+        console.log('site to scrape = ' + siteToScrape);
 
-    // Need to make url interpret JSON url return, if scraping own site
+    // Need to decide what URL to pass to scrapePage()
+
+    // Decide if scraping own site
+        // if scraping own site:
         if(siteToScrape == "Scrape my own site"){
-            var urls = [];
+            console.log("I think site to scrpe == 'scrape my own site'");
+            console.log("input url = " + req.query.inputUrl);
+        // Make url interpret JSON url return
             for(var i = 0; i<req.query.inputUrl.length; i++){
                 urls.push(decodeURIComponent(req.query.inputUrl[i]));
             }
         // If scraping doesn't require a login, scrape the page passed through AJAX call
         // app.get(function(req,res){
             for(var i = 0; i < urls.length; i++){
+                console.log("req "+ req.query.pageElement);
                 scrapePage(urls[i], req, res);
             }
         }
+        // if not scraping own site
         else{
-            scrapePage(siteDictionary[siteToScrape].url,req,res);
+            var counter
+        // Get url from the external dictionary
+            for(var i = 0; i<extDictionary.sites.length; i++){
+                if(extDictionary.sites[i].name == siteToScrape){
+                    console.log('external dictionary = ' + extDictionary.sites[i].name);
+                    urls = extDictionary.sites[i].url;
+                    counter = i;
+                }
+            }
+            scrapePage(urls, req, res, counter);
         }        
 
     /* 
@@ -89,11 +82,11 @@ function clearScraper(req, res){
             
             _token:8m7wcbr7r4HR9AisRccBYWgS1G2fapSsXHxHD7CC
     */
-        console.log(elementsForUI);
+        console.log('elements for UI = ' + elementsForUI);
     };
 
 
-    function scrapePage(url, req, res){
+    function scrapePage(url, req, res,i = 0){
         request.get(url, function(error, response, body){
             if(siteToScrape == "Scrape my own site"){
             // If got explicitly defined elements, assign from req.query
@@ -104,10 +97,10 @@ function clearScraper(req, res){
             }
             else{
             // Else, if got pre-defined website, assign from dictionary
-                var pageElement = siteDictionary[siteToScrape].pageElement;
-                var childElement = siteDictionary[siteToScrape].childElement;
-                var subChildElement = siteDictionary[siteToScrape].subChildElement;
-                var reqLogin = siteDictionary[siteToScrape].reqLogin
+                var pageElement = extDictionary.sites[i].pageElement
+                var childElement = extDictionary.sites[i].childElement;
+                var subChildElement = extDictionary.sites[i].subChildElement;
+                var reqLogin = extDictionary.sites[i].reqLogin
 
             }
             
