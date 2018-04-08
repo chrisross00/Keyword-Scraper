@@ -90,6 +90,10 @@
         background-color: #D548A6;
         transform: scale(1.05);
       }
+      /* .btn:disabled{
+        background: gainsboro;
+        content:none;
+      } */
       .dataRegion{
         padding-top: 2em;
       }
@@ -142,15 +146,9 @@
 
             <!-- Placeholders to be replaced by compiled handlebars responses -->
             <h2>So. Whatchu finna scrape?</h2>
-              <select class="sitePicker">
-                  <option>-Select an Option-</option>
-                  <option>DuckClub</option>
-                  <option>KEXP</option>
-                  <option>Reddit</option>
-                  <option>Scrape my own site</option>
-                </select>
+              <select class="sitePicker" id="sitePickerID">
+              </select>
           
-            <!-- <button class="sitePicker">clickme</button> -->
             <div class="custom-site-hide">
               <p></p>
                 <form class="scraperForm" id="urlForm">
@@ -210,23 +208,43 @@
         <div id="footer">
             <p>This thing was created using Node.js, Express.js, Handlebars.js, HTML, CSS, jQuery, way too many shell commands, and a shitload of uppers.</p>
         </div>
-        
-        <!-- User template to be referenced during handlebars compile -->
-
-        <!-- Artists-followed template to be referenced during handlebars compile -->
-        <script id="followed-artists-template" type="text/x-handlebars-template">
-          <h1>Following these artists:</h1>
-          {{#each artists.items}}
-          <dl>
-            <dd>{{name}}</dd>
-          {{/each}}
-          </dl>
-        </script>
 
         <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0-alpha.1/handlebars.min.js"></script>
         <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+
+<!-- Handlebars sections -->
+  <!-- For Handlebar compile reference -->
+  <script id="handlebars-site-name" type="text/x-handlebars-template">
+    <option>--Select an Option--</option>
+      {{#each sites}}
+      <option>{{name}}</option>
+      {{/each}}            
+    <option>Scrape my own site</option>
+  </script>
+
+  <!-- Handlebar compiler -->
+  <script>
+    // $(document).ready(function(){
+      var template = $("#handlebars-site-name").html();
+      var templateScript = Handlebars.compile(template);
+      var context;
+      $.ajax({
+        url:'/extDictionary',
+        context: document.body,
+        success: function(data, status, response){
+          context = data.dictionary;
+
+          $("#sitePickerID").append(templateScript(context));
+          // console.log(context);
+        }
+      });
+    // });
+
+    </script>
         
+
 <!-- AJAX sections -->
+
         <script>
         (function() {
 
@@ -238,8 +256,6 @@
           $('.sitePicker').change(function(){
             var str;
             str = $(".sitePicker option:selected").text();
-            console.log(str);
-            console.log($(this).next("div"));
 
             if(str == "Scrape my own site"){
               $(this).next("div").each(function(){
@@ -276,7 +292,6 @@
         // Click 'Clear Data'
           $('#clear-scraper').on('click', function(){
             scrapedArea.innerHTML = '';
-            console.log('clicked');
             $.ajax({
               url: $('#clear-scraper').attr('action'),
               success: function(data, status){
@@ -301,7 +316,6 @@
               }
               else {
               // Clear validation errors
-                console.log("clearing validation errors");
                 $('#website').css(reset_css);
                 $('#pageElement').css(reset_css);
 
@@ -322,9 +336,8 @@
               }
             }
             else{
-              if($(".sitePicker option:selected").val()=='-Select an Option-'){
-                console.log('error: defualt selection chosen');
-                while($(".sitePicker option:selected").val()=='-Select an Option-'){
+              if($(".sitePicker option:selected").val()=='--Select an Option--'){
+                while($(".sitePicker option:selected").val()=='--Select an Option--'){
                   $(".sitePicker").css(error_css);
                   return false;
                 }
